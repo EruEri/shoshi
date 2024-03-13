@@ -16,3 +16,5 @@
 (**********************************************************************************************)
 
 module Config = Config
+module Error = Error
+module Bibtexs = Bibtexs

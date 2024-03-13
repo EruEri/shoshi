@@ -19,11 +19,14 @@ open Cmdliner
 
 let name = "init"
 
-type t = unit
+type t = {force: bool}
+
+let term_force =
+  Arg.(value & flag & info [ "f"; "force" ] ~doc:"Force the initialisation")
 
 let term_cmd run =
-  let combine () = run () in
-  Term.(const combine $ const ())
+  let combine force = run {force} in
+  Term.(const combine $ term_force)
 
 let doc = "Initizalize $(mname)"
 let man = []
@@ -33,7 +36,14 @@ let cmd run =
   Cmd.v info @@ term_cmd run
 
 let run t =
-  let () = t in
+  let {force = delete} = t in
+
+  let () = match Libshoshi.Config.initialize_shoshi ~delete () with
+    | Ok () -> ()
+    | Error message -> failwith message
+  in
+
+  let () = Printf.printf "%s initialized\n%!" Libshoshi.Config.shoshi_name in
   ()
 
 let command = cmd run

@@ -17,26 +17,37 @@
 
 open Cmdliner
 
-let term_cmd run =
-  let combine () = run () in
-  Term.(const combine $ const ())
+let name = "merge"
 
-let name = Libshoshi.Config.shoshi_name
-let version = Libshoshi.Config.version
-let doc = "A command-line bibtex manager"
+type t = {
+  bibtex: string;
+  paper: string option
+}
 
-let man =
-  [
-    `S Manpage.s_description;
-    `P "$(mname) is a command-line bibtex manager";
-    `P
-      "To use $(mname), you need to initialize it. Use the $(mname) init \
-       subcommand";
-  ]
+let term_bibtex = 
+  Arg.(required & pos 0 (some string) None & info ~doc:"Bibtex file" ~docv:"<BIBTEX>" [])
 
-let info = Cmd.info ~doc ~version ~man name
-let subcommands = Cmd.group info [ Cinit.command; Cmerge.command]
+let term_paper = 
+  Arg.(value & pos 1 (some string) None & info ~doc:"Paper file" ~docv:"<PAPER>" [])
 
-let eval () =
-  (* let () = Libcithare.Error.register_cithare_error () in *)
-  Cmd.eval ~catch:false subcommands
+let term_cmd run = 
+  let combine bibtex paper = 
+    run {bibtex; paper}
+  in
+  Term.(const combine $ term_bibtex $ term_paper)
+
+let doc = "Add bibtex"
+let man = []
+
+let cmd run = 
+  let info = Cmd.info ~doc ~man name in
+  Cmd.v info @@ term_cmd run
+
+let run cmd = 
+  let () = Libshoshi.Config.check_shoshi_initialiazed () in
+  let {bibtex; paper = _} = cmd in
+  let _ = Libshoshi.Bibtexs.parse bibtex in
+  let shoshi_db = Libshoshi.Bibtexs.shoshi_bibtex in
+  ()
+
+let command = cmd run

@@ -15,28 +15,21 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-open Cmdliner
+type t = 
+  | ShoshiAlreadyInitialized
+  | ShoshiNotInitialized
+  | BibtexParsingError
 
-let term_cmd run =
-  let combine () = run () in
-  Term.(const combine $ const ())
+type exn += ShoshiError of t
 
-let name = Libshoshi.Config.shoshi_name
-let version = Libshoshi.Config.version
-let doc = "A command-line bibtex manager"
+let to_string = function
+  | ShoshiAlreadyInitialized -> "shoshi is already initialized"
+  | ShoshiNotInitialized -> "shoshi is not initialized"
+  | BibtexParsingError -> "Error while parsing the bibtex file"
 
-let man =
-  [
-    `S Manpage.s_description;
-    `P "$(mname) is a command-line bibtex manager";
-    `P
-      "To use $(mname), you need to initialize it. Use the $(mname) init \
-       subcommand";
-  ]
+let shoshi_already_init () = raise @@ ShoshiError ShoshiAlreadyInitialized
 
-let info = Cmd.info ~doc ~version ~man name
-let subcommands = Cmd.group info [ Cinit.command; Cmerge.command]
+let shoshi_not_init () = raise @@ ShoshiError ShoshiNotInitialized
 
-let eval () =
-  (* let () = Libcithare.Error.register_cithare_error () in *)
-  Cmd.eval ~catch:false subcommands
+let bibtex_parsing_error () = raise @@ ShoshiError BibtexParsingError
+
