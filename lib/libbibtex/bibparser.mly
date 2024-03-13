@@ -15,48 +15,51 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-module ShoshiXdg = struct
-  let xdg = Xdg.create ~env:Sys.getenv_opt ()
-  let xdg_data = Xdg.data_dir xdg
-  let xdg_config = Xdg.config_dir xdg
-  let xdg_state = Xdg.state_dir xdg
-end
 
-let ( / ) = Filename.concat
+%{
+    
+%}
 
-let version =
-  match Build_info.V1.version () with
-  | Some s -> Build_info.V1.Version.to_string s
-  | None -> "[n/a]"
+%token <Entry.entry_type> EntryType
+%token <string> Identifier
+%token <int> Number
+%token <string> Content
+%token LBRACE RBRACE
+%token EQUAL COMMA
+%token EOF
 
-let shoshi_name = "shoshi"
-let shoshi_bibtex_name = Printf.sprintf "%s-db.bibtex" shoshi_name
 
-(**
-    [$XDG_DATA_HOME/shoshi] probably [$HOME/.local/share/shoshi]
-*)
-let shoshi_share_dir = ShoshiXdg.xdg_data / shoshi_name
+%start <Entry.t list> bibtex_database
 
-let shoshi_state_dir = ShoshiXdg.xdg_state / shoshi_name
-let shoshi_config_dir = ShoshiXdg.xdg_config / shoshi_name
-let shoshi_bibtex = shoshi_share_dir / shoshi_bibtex_name
-let is_shoshi_initialized () = Util.Filesys.file_exists @@ shoshi_bibtex
+%%
 
-let check_shoshi_initialiazed () =
-  if not @@ is_shoshi_initialized () then Error.shoshi_not_init ()
+%inline bracketed(X):
+    | delimited(LBRACE, X, RBRACE) { $1 } 
 
-let initialize_shoshi ?(delete = false) () =
-  let root = "/" in
-  let is_initialized = is_shoshi_initialized () in
-  match is_initialized with
-  | true ->
-      if delete then
-        let () = Util.Filesys.rmrf shoshi_share_dir in
-        Util.Filesys.mkfilep root
-          (String.split_on_char '/' shoshi_share_dir)
-          shoshi_bibtex_name
-      else Ok ()
-  | false ->
-      Util.Filesys.mkfilep root
-        (String.split_on_char '/' shoshi_share_dir)
-        shoshi_bibtex_name
+%inline splitted(lhs, sep, rhs):
+    | lhs=lhs sep rhs=rhs { lhs, rhs }
+
+bibtex_database:
+    | l=list(bibtex_entry) EOF { l }
+
+bibtex_entry:
+    | entry_type=EntryType citekeys_fields=bracketed(splitted(Identifier, COMMA, separated_list(COMMA,bibtex_field))) {
+        let (citekey, fields) = citekeys_fields in
+        let fields = Entry.FieldMap.of_seq (List.to_seq fields) in
+        Entry.{
+            entry_type;
+            citekey;
+            fields
+        }
+    }  
+
+bibtex_field:
+    | Identifier EQUAL bibtex_field_value {
+        ($1, $3)
+    }
+
+bibtex_field_value:
+    | Content { $1 }
+    | Number { string_of_int $1}
+
+

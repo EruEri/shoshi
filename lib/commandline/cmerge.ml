@@ -19,35 +19,32 @@ open Cmdliner
 
 let name = "merge"
 
-type t = {
-  bibtex: string;
-  paper: string option
-}
+type t = { bibtex : string; paper : string option }
 
-let term_bibtex = 
-  Arg.(required & pos 0 (some string) None & info ~doc:"Bibtex file" ~docv:"<BIBTEX>" [])
+let term_bibtex =
+  Arg.(
+    required
+    & pos 0 (some string) None
+    & info ~doc:"Bibtex file" ~docv:"<BIBTEX>" [])
 
-let term_paper = 
-  Arg.(value & pos 1 (some string) None & info ~doc:"Paper file" ~docv:"<PAPER>" [])
+let term_paper =
+  Arg.(
+    value & pos 1 (some string) None & info ~doc:"Paper file" ~docv:"<PAPER>" [])
 
-let term_cmd run = 
-  let combine bibtex paper = 
-    run {bibtex; paper}
-  in
+let term_cmd run =
+  let combine bibtex paper = run { bibtex; paper } in
   Term.(const combine $ term_bibtex $ term_paper)
 
 let doc = "Add bibtex"
 let man = []
 
-let cmd run = 
+let cmd run =
   let info = Cmd.info ~doc ~man name in
   Cmd.v info @@ term_cmd run
 
-let run cmd = 
+let run cmd =
   let () = Libshoshi.Config.check_shoshi_initialiazed () in
-  let {bibtex; paper = _} = cmd in
-  let _ = Libshoshi.Bibtexs.parse bibtex in
-  let shoshi_db = Libshoshi.Bibtexs.shoshi_bibtex in
+  let { bibtex = _; paper = _ } = cmd in
   ()
 
 let command = cmd run

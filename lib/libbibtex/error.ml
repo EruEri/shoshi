@@ -15,16 +15,13 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
+type parser_error =
+  | UnknownEntryType of string Util.Position.location
+  | UnclosedString of Util.Position.position
 
-let parse file = 
-  In_channel.with_open_bin file (fun ic -> 
-    Bibtex.parse @@ Lexing.from_channel ic
-  )
+type exn += BibtexParserError of parser_error
 
-let shoshi_bibtex () = 
-  In_channel.with_open_bin Config.shoshi_bibtex (fun ic -> 
-    Bibtex.parse @@ Lexing.from_channel ic
-  )
+let unknonw_entry_type t = raise @@ BibtexParserError (UnknownEntryType t)
 
-
-  
+let unclosed_string position =
+  raise @@ BibtexParserError (UnclosedString position)

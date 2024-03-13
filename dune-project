@@ -2,6 +2,8 @@
 
 (name shoshi)
 
+(using menhir 2.1)
+
 (version "0.1.0")
 
 (generate_opam_files true)
@@ -19,7 +21,7 @@
  (name shoshi)
  (synopsis "A little bibtex manager")
  (description "A longer description")
- (depends ocaml dune cmdliner talaria-bibtex)
+ (depends ocaml dune cmdliner menhir)
  (tags
   (cli bibtex)))
 

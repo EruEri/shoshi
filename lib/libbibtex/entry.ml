@@ -15,48 +15,52 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-module ShoshiXdg = struct
-  let xdg = Xdg.create ~env:Sys.getenv_opt ()
-  let xdg_data = Xdg.data_dir xdg
-  let xdg_config = Xdg.config_dir xdg
-  let xdg_state = Xdg.state_dir xdg
-end
+type entry_type =
+  | Article
+  | Book
+  | Booklet
+  | Conference
+  | Inbook
+  | Incollection
+  | Inproceedings
+  | Manual
+  | Masterthesis
+  | Misc
+  | Phdthesis
+  | Proceedings
+  | Techreport
+  | Unpublished
 
-let ( / ) = Filename.concat
+let of_string s =
+  let s = String.trim @@ String.lowercase_ascii s in
+  match s with
+  | "article" -> Article
+  | "book" -> Book
+  | "booklet" -> Booklet
+  | "conference" -> Conference
+  | "inbook" -> Inbook
+  | "incollection" -> Incollection
+  | "inproceedings" -> Inproceedings
+  | "manual" -> Manual
+  | "masterthesis" -> Masterthesis
+  | "misc" -> Misc
+  | "phdthesis" -> Phdthesis
+  | "proceedings" -> Proceedings
+  | "techreport" -> Techreport
+  | "unpublished" -> Unpublished
+  | _ as s -> invalid_arg @@ Printf.sprintf "Unknown entry type : %s" s
 
-let version =
-  match Build_info.V1.version () with
-  | Some s -> Build_info.V1.Version.to_string s
-  | None -> "[n/a]"
+module FieldMap = Map.Make (struct
+  type t = String.t
 
-let shoshi_name = "shoshi"
-let shoshi_bibtex_name = Printf.sprintf "%s-db.bibtex" shoshi_name
+  let compare lhs rhs =
+    String.compare (String.lowercase_ascii lhs) (String.lowercase_ascii rhs)
+end)
 
-(**
-    [$XDG_DATA_HOME/shoshi] probably [$HOME/.local/share/shoshi]
-*)
-let shoshi_share_dir = ShoshiXdg.xdg_data / shoshi_name
+type t = {
+  entry_type : entry_type;
+  citekey : string;
+  fields : string FieldMap.t;
+}
 
-let shoshi_state_dir = ShoshiXdg.xdg_state / shoshi_name
-let shoshi_config_dir = ShoshiXdg.xdg_config / shoshi_name
-let shoshi_bibtex = shoshi_share_dir / shoshi_bibtex_name
-let is_shoshi_initialized () = Util.Filesys.file_exists @@ shoshi_bibtex
-
-let check_shoshi_initialiazed () =
-  if not @@ is_shoshi_initialized () then Error.shoshi_not_init ()
-
-let initialize_shoshi ?(delete = false) () =
-  let root = "/" in
-  let is_initialized = is_shoshi_initialized () in
-  match is_initialized with
-  | true ->
-      if delete then
-        let () = Util.Filesys.rmrf shoshi_share_dir in
-        Util.Filesys.mkfilep root
-          (String.split_on_char '/' shoshi_share_dir)
-          shoshi_bibtex_name
-      else Ok ()
-  | false ->
-      Util.Filesys.mkfilep root
-        (String.split_on_char '/' shoshi_share_dir)
-        shoshi_bibtex_name
+let t = FieldMap.of_seq

@@ -18,22 +18,18 @@
 (**
     [file_exists path] checks if the file at [path] exists and is a file and not a directory
 *)
-    let file_exists path =
-      match Sys.file_exists path with
-      | false ->
-          false
-      | true ->
-          not @@ Sys.is_directory path
-    
-    (**
+let file_exists path =
+  match Sys.file_exists path with
+  | false -> false
+  | true -> not @@ Sys.is_directory path
+
+(**
         [dir_exists path] checks if the file at [path] exists and is a directory
     *)
-    let dir_exists path =
-      match Sys.file_exists path with
-      | false ->
-          false
-      | true ->
-          Sys.is_directory path
+let dir_exists path =
+  match Sys.file_exists path with
+  | false -> false
+  | true -> Sys.is_directory path
 
 (**
     [mkdirp root componenent] creates directories which start at [root] and recursively [componenent]
@@ -43,46 +39,38 @@ let rec mkdirp root componenent =
   let ok = Result.ok in
   let err = Result.error in
   match componenent with
-  | [] ->
-      ok ()
+  | [] -> ok ()
   | t :: q ->
       let path = Filename.concat root t in
       let* () =
         match dir_exists path with
-        | true ->
-            ok ()
+        | true -> ok ()
         | false -> (
             match Sys.mkdir path 0o755 with
-            | () ->
-                ok ()
-            | exception _ ->
-                err path
-          )
+            | () -> ok ()
+            | exception _ -> err path)
       in
       mkdirp path q
 
+let mkfilep root componenent file =
+  let ( let* ) = Result.bind in
 
-      let mkfilep root componenent file =
-        let ( let* ) = Result.bind in
-      
-        let* () = mkdirp root componenent in
-        let path = List.fold_left Filename.concat root componenent in
-        let path = Filename.concat path file in
-        try
-          let chan = Out_channel.open_text path in
-          let () = close_out chan in
-          Ok ()
-        with _ -> Error path
+  let* () = mkdirp root componenent in
+  let path = List.fold_left Filename.concat root componenent in
+  let path = Filename.concat path file in
+  try
+    let chan = Out_channel.open_text path in
+    let () = close_out chan in
+    Ok ()
+  with _ -> Error path
 
-  let rec rmrf path =
-    match Sys.is_directory path with
-    | true ->
-        let () =
-          Sys.readdir path
-          |> Array.iter (fun name -> rmrf (Filename.concat path name) )
-        in
-        Unix.rmdir path
-    | false ->
-        Sys.remove path
-    | exception e ->
-        raise e
+let rec rmrf path =
+  match Sys.is_directory path with
+  | true ->
+      let () =
+        Sys.readdir path
+        |> Array.iter (fun name -> rmrf (Filename.concat path name))
+      in
+      Unix.rmdir path
+  | false -> Sys.remove path
+  | exception e -> raise e

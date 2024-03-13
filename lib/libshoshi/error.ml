@@ -15,11 +15,7 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-type t = 
-  | ShoshiAlreadyInitialized
-  | ShoshiNotInitialized
-  | BibtexParsingError
-
+type t = ShoshiAlreadyInitialized | ShoshiNotInitialized | BibtexParsingError
 type exn += ShoshiError of t
 
 let to_string = function
@@ -28,8 +24,5 @@ let to_string = function
   | BibtexParsingError -> "Error while parsing the bibtex file"
 
 let shoshi_already_init () = raise @@ ShoshiError ShoshiAlreadyInitialized
-
 let shoshi_not_init () = raise @@ ShoshiError ShoshiNotInitialized
-
 let bibtex_parsing_error () = raise @@ ShoshiError BibtexParsingError
-
