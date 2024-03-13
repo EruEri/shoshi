@@ -33,4 +33,5 @@ let of_file file =
       let lexbuf = Lexing.from_channel ic in
       of_lexing lexbuf)
 
-let to_string _database = String.empty
+let to_string database = 
+  String.concat "\n\n" @@ List.map BibEntry.to_string database

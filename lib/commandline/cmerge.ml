@@ -35,7 +35,7 @@ let term_cmd run =
   let combine bibtex paper = run { bibtex; paper } in
   Term.(const combine $ term_bibtex $ term_paper)
 
-let doc = "Add bibtex"
+let doc = "Merge bibtex with $(mname)"
 let man = []
 
 let cmd run =
@@ -44,7 +44,14 @@ let cmd run =
 
 let run cmd =
   let () = Libshoshi.Config.check_shoshi_initialiazed () in
-  let { bibtex = _; paper = _ } = cmd in
+  let { bibtex; paper = _ } = cmd in
+
+  let database = match ShoshiBibtex.Database.of_file bibtex with
+    | Ok databse -> databse
+    | Error (Right position) -> Util.Position.print_position (Fun.id) position; failwith ""
+    | Error e -> failwith @@ Printf.sprintf "Error while parsing: %u" @@ Obj.tag (Obj.repr e)
+  in
+  let () = Printf.printf "%s\n%!" @@ ShoshiBibtex.Database.to_string database in
   ()
 
 let command = cmd run

@@ -42,7 +42,7 @@ let upLetter = ['A'-'Z']
 let identifiant = (loLetter | upLetter | digit)+
 
 let citekey = (loLetter | upLetter | digit | "_"| ":" | "-")+
-
+let raw_text = [^ '{' '}' ',' '\010' '\013' ' ' '\009' '\012' '=']
 let number = digit+
 
 let newline = ('\010' | '\013' | "\013\010")
@@ -76,8 +76,10 @@ rule token = parse
 | number as s {
     Number (int_of_string s)
 }
-| identifiant as s { Identifier s }
-| eof { EOF }
+(* | identifiant as s { Identifier s } *)
+| citekey as s { Identifier s}
+| raw_text+ as s { Content s }
+| _  { token lexbuf}
 | eof { EOF }
 and read_string buffer = parse
 | '"' { Buffer.contents buffer }

@@ -30,7 +30,7 @@ let version =
   | None -> "[n/a]"
 
 let shoshi_name = "shoshi"
-let shoshi_bibtex_name = Printf.sprintf "%s-db.bibtex" shoshi_name
+let shoshi_bibtex_name = Printf.sprintf "%s-db.bib" shoshi_name
 
 (**
     [$XDG_DATA_HOME/shoshi] probably [$HOME/.local/share/shoshi]

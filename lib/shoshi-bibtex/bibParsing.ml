@@ -28,7 +28,7 @@ let rec parse lexbuf (checkpoint : BibBaseType.database I.checkpoint) =
         parse lexbuf checkpoint
       with
       | Error.BibtexParserError e -> Result.Error (Either.Left e)
-      | _ -> failwith "Uncatched Lexer Error")
+      | e -> raise e)
   | I.Shifting _ | I.AboutToReduce _ ->
       let checkpoint = I.resume checkpoint in
       parse lexbuf checkpoint

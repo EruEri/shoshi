@@ -43,7 +43,7 @@ bibtex_database:
     | l=list(bibtex_entry) EOF { l }
 
 bibtex_entry:
-    | entry_type=EntryType citekeys_fields=bracketed(splitted(Identifier, COMMA, separated_list(COMMA,bibtex_field))) {
+    | entry_type=EntryType citekeys_fields=bracketed(splitted(Identifier, COMMA, separated_list(COMMA, bibtex_field))) {
         let (citekey, fields) = citekeys_fields in
         let fields = BibEntry.FieldMap.of_seq (List.to_seq fields) in
         BibEntry.{
@@ -57,9 +57,14 @@ bibtex_field:
     | Identifier EQUAL bibtex_field_value {
         ($1, $3)
     }
+    | Identifier EQUAL bracketed(list(bibtex_field_value)) {
+        ($1, String.concat " " $3)
+    }
 
 bibtex_field_value:
+    | Identifier { $1 }
     | Content { $1 }
     | Number { string_of_int $1}
+    | COMMA { ","}
 
 

@@ -50,6 +50,24 @@ module Type = struct
     | "techreport" -> Techreport
     | "unpublished" -> Unpublished
     | _ as s -> invalid_arg @@ Printf.sprintf "Unknown entry type : %s" s
+
+    let to_string entry_type = 
+      let s = function
+      | Article -> "article"
+      | Book -> "book"
+      | Booklet -> "booklet"
+      | Conference -> "Conference"
+      | Inbook -> "inbook"
+      | Incollection -> "incollection"
+      | Inproceedings -> "onproceedings"
+      | Manual -> "manual"
+      | Masterthesis -> "masterthesis"
+      | Misc -> "misc"
+      | Phdthesis -> "phsthesis"
+      | Proceedings -> "proceedings"
+      | Techreport -> "techreport"
+      | Unpublished -> "unpublished" in
+    Printf.sprintf "@%s" @@ s entry_type
 end
 
 module FieldMap = Map.Make (struct
@@ -61,9 +79,19 @@ end)
 
 type t = { entry_type : Type.t; citekey : string; fields : string FieldMap.t }
 
+
+let to_string entry = 
+  let string_fields = String.concat "\n" 
+    @@ FieldMap.fold (fun key value acc -> 
+      (Printf.sprintf "%s = \"%s\"" key value) :: acc
+    ) entry.fields [] in
+  Printf.sprintf "%s{%s,\n%s\n}" 
+  (Type.to_string entry.entry_type)
+  entry.citekey
+  string_fields
+
 let create entry_type citekey fields = { entry_type; citekey; fields }
 let raw_field field entry = FieldMap.find_opt field entry.fields
-let to_string _entry = Printf.sprintf ""
 let address = raw_field "address"
 let annote = raw_field "annote"
 let author = raw_field "author"
