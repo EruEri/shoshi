@@ -1,0 +1,3 @@
+(library
+ (name libshoshi)
+ (libraries talaria-bibtex dune-build-info))

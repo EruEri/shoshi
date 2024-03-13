@@ -1,0 +1,4 @@
+(executable
+ (public_name shoshi)
+ (name shoshi)
+ (libraries commandline))
