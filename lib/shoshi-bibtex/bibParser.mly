@@ -14,3 +14,52 @@
 (* If not, see <http://www.gnu.org/licenses/>.                                                *)
 (*                                                                                            *)
 (**********************************************************************************************)
+
+
+%{
+    
+%}
+
+%token <BibEntry.Type.t> EntryType
+%token <string> Identifier
+%token <int> Number
+%token <string> Content
+%token LBRACE RBRACE
+%token EQUAL COMMA
+%token EOF
+
+
+%start <BibBaseType.database> bibtex_database
+
+%%
+
+%inline bracketed(X):
+    | delimited(LBRACE, X, RBRACE) { $1 } 
+
+%inline splitted(lhs, sep, rhs):
+    | lhs=lhs sep rhs=rhs { lhs, rhs }
+
+bibtex_database:
+    | l=list(bibtex_entry) EOF { l }
+
+bibtex_entry:
+    | entry_type=EntryType citekeys_fields=bracketed(splitted(Identifier, COMMA, separated_list(COMMA,bibtex_field))) {
+        let (citekey, fields) = citekeys_fields in
+        let fields = BibEntry.FieldMap.of_seq (List.to_seq fields) in
+        BibEntry.{
+            entry_type;
+            citekey;
+            fields
+        }
+    }  
+
+bibtex_field:
+    | Identifier EQUAL bibtex_field_value {
+        ($1, $3)
+    }
+
+bibtex_field_value:
+    | Content { $1 }
+    | Number { string_of_int $1}
+
+

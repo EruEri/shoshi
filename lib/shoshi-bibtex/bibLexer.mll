@@ -16,7 +16,7 @@
 (**********************************************************************************************)
 
 {
-    open Bibparser
+    open BibParser
 
     (*
         article: any article published in a periodical like a journal article or magazine article
@@ -67,7 +67,7 @@ rule token = parse
 }
 | "@" (identifiant as entryname) {
     let entrykind = try 
-        Entry.of_string entryname 
+        BibEntry.Type.of_string entryname 
     with _ -> 
         Error.unknonw_entry_type @@ Util.Position.current_located entryname lexbuf
     in

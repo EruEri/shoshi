@@ -1,11 +1,11 @@
 (ocamllex
- (modules biblexer))
+ (modules bibLexer))
 
 (menhir
- (modules bibparser)
+ (modules bibParser)
  (flags --table --explain)
  (infer true))
 
 (library
- (name libbibtex)
+ (name shoshiBibtex)
  (libraries menhirLib util))

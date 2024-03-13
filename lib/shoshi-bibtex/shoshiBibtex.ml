@@ -15,52 +15,5 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-type entry_type =
-  | Article
-  | Book
-  | Booklet
-  | Conference
-  | Inbook
-  | Incollection
-  | Inproceedings
-  | Manual
-  | Masterthesis
-  | Misc
-  | Phdthesis
-  | Proceedings
-  | Techreport
-  | Unpublished
-
-let of_string s =
-  let s = String.trim @@ String.lowercase_ascii s in
-  match s with
-  | "article" -> Article
-  | "book" -> Book
-  | "booklet" -> Booklet
-  | "conference" -> Conference
-  | "inbook" -> Inbook
-  | "incollection" -> Incollection
-  | "inproceedings" -> Inproceedings
-  | "manual" -> Manual
-  | "masterthesis" -> Masterthesis
-  | "misc" -> Misc
-  | "phdthesis" -> Phdthesis
-  | "proceedings" -> Proceedings
-  | "techreport" -> Techreport
-  | "unpublished" -> Unpublished
-  | _ as s -> invalid_arg @@ Printf.sprintf "Unknown entry type : %s" s
-
-module FieldMap = Map.Make (struct
-  type t = String.t
-
-  let compare lhs rhs =
-    String.compare (String.lowercase_ascii lhs) (String.lowercase_ascii rhs)
-end)
-
-type t = {
-  entry_type : entry_type;
-  citekey : string;
-  fields : string FieldMap.t;
-}
-
-let t = FieldMap.of_seq
+module BibEntry = BibEntry
+module Database = Database
