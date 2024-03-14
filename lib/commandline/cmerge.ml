@@ -46,10 +46,16 @@ let run cmd =
   let () = Libshoshi.Config.check_shoshi_initialiazed () in
   let { bibtex; paper = _ } = cmd in
 
-  let database = match ShoshiBibtex.Database.of_file bibtex with
+  let database =
+    match ShoshiBibtex.Database.of_file bibtex with
     | Ok databse -> databse
-    | Error (Right position) -> Util.Position.print_position (Fun.id) position; failwith ""
-    | Error e -> failwith @@ Printf.sprintf "Error while parsing: %u" @@ Obj.tag (Obj.repr e)
+    | Error (Right position) ->
+        Util.Position.print_position Fun.id position;
+        failwith ""
+    | Error e ->
+        failwith
+        @@ Printf.sprintf "Error while parsing: %u"
+        @@ Obj.tag (Obj.repr e)
   in
   let () = Printf.printf "%s\n%!" @@ ShoshiBibtex.Database.to_string database in
   ()

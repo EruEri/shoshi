@@ -15,23 +15,41 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-type t = BibBaseType.database
+open Cmdliner
 
-let empty : t = []
-let add entry database = database @ [ entry ]
+let name = "edit"
 
-let of_lexing lexbuf =
-  BibParsing.parse lexbuf
-  @@ BibParser.Incremental.bibtex_database lexbuf.lex_curr_p
+type t = unit
 
-let of_string content =
-  let lexbuf = Lexing.from_string content in
-  of_lexing lexbuf
+let term_cmd run =
+  let combine () = run () in
+  Term.(const combine $ const ())
 
-let of_file file =
-  In_channel.with_open_bin file (fun ic ->
-      let lexbuf = Lexing.from_channel ic in
-      of_lexing lexbuf)
+let doc = "Edit the bibliography"
+let man = []
 
-let to_string database =
-  String.concat "\n\n" @@ List.map BibEntry.to_string database
+let cmd run =
+  let info = Cmd.info ~doc ~man name in
+  Cmd.v info @@ term_cmd run
+
+let run cmd =
+  let () = Libshoshi.Config.check_shoshi_initialiazed () in
+  let () = cmd in
+
+  let pid = try Unix.fork () with _ -> failwith "Unable to fork" in
+  match pid with
+  | 0 ->
+      let () =
+        Array.iter
+          (fun editor ->
+            try Unix.execvp editor [| editor; Libshoshi.Config.shoshi_bibtex |]
+            with _ -> ())
+          Libshoshi.Config.shoshi_knwon_editors
+      in
+      let () = prerr_endline "No editor found" in
+      Unix._exit 1
+  | _ ->
+      let _, _ = Unix.wait () in
+      ()
+
+let command = cmd run

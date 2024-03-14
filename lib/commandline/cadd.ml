@@ -15,23 +15,46 @@
 (*                                                                                            *)
 (**********************************************************************************************)
 
-type t = BibBaseType.database
+open Cmdliner
 
-let empty : t = []
-let add entry database = database @ [ entry ]
+let name = "add"
 
-let of_lexing lexbuf =
-  BibParsing.parse lexbuf
-  @@ BibParser.Incremental.bibtex_database lexbuf.lex_curr_p
+type t = { rstdin : bool }
 
-let of_string content =
-  let lexbuf = Lexing.from_string content in
-  of_lexing lexbuf
+let term_rstdin =
+  Arg.(
+    value & flag & info ~doc:"Read the bibtex content from stdin" [ "stdin" ])
 
-let of_file file =
-  In_channel.with_open_bin file (fun ic ->
-      let lexbuf = Lexing.from_channel ic in
-      of_lexing lexbuf)
+let term_cmd run =
+  let combine rstdin = run { rstdin } in
+  Term.(const combine $ term_rstdin)
 
-let to_string database =
-  String.concat "\n\n" @@ List.map BibEntry.to_string database
+let doc = "Add bibtex entry to the bibliography"
+let man = []
+
+let cmd run =
+  let info = Cmd.info ~doc ~man name in
+  Cmd.v info @@ term_cmd run
+
+let run cmd =
+  let () = Libshoshi.Config.check_shoshi_initialiazed () in
+  let { rstdin } = cmd in
+  match rstdin with
+  | false -> ()
+  | true ->
+      let shoshi_database =
+        match ShoshiBibtex.Database.of_file Libshoshi.Config.shoshi_bibtex with
+        | Ok database -> database
+        | Error _ -> failwith "Parsing error 1"
+      in
+      let database =
+        match ShoshiBibtex.Database.of_lexing @@ Lexing.from_channel stdin with
+        | Ok database -> database
+        | Error _ -> failwith "Parsing error 2"
+      in
+
+      let shoshi_database = shoshi_database @ database in
+      let () = Libshoshi.Config.save shoshi_database in
+      ()
+
+let command = cmd run

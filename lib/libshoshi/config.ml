@@ -60,3 +60,9 @@ let initialize_shoshi ?(delete = false) () =
       Util.Filesys.mkfilep root
         (String.split_on_char '/' shoshi_share_dir)
         shoshi_bibtex_name
+
+let shoshi_knwon_editors = [| "ee"; "emacs"; "nano"; "hx"; "vi"; "vim" |]
+
+let save ?(where = shoshi_bibtex) database =
+  Out_channel.with_open_bin where (fun oc ->
+      Printf.fprintf oc "%s%!" @@ ShoshiBibtex.Database.to_string database)

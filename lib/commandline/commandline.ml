@@ -35,7 +35,9 @@ let man =
   ]
 
 let info = Cmd.info ~doc ~version ~man name
-let subcommands = Cmd.group info [ Cinit.command; Cmerge.command ]
+
+let subcommands =
+  Cmd.group info [ Cadd.command; Cinit.command; Cmerge.command; Cedit.command ]
 
 let eval () =
   (* let () = Libcithare.Error.register_cithare_error () in *)
