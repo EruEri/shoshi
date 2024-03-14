@@ -22,6 +22,11 @@ module ShoshiXdg = struct
   let xdg_state = Xdg.state_dir xdg
 end
 
+module ShoshiEnv = struct
+  let shoshi_editor = "SHOSHI_EDITOR"
+  let shoshi_editor_options = "SHOSHI_EDITOR_OPTS"
+end
+
 let ( / ) = Filename.concat
 
 let version =

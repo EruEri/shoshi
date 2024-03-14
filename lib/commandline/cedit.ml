@@ -26,11 +26,39 @@ let term_cmd run =
   Term.(const combine $ const ())
 
 let doc = "Edit the bibliography"
-let man = []
+
+let man =
+  [
+    `S Manpage.s_environment;
+    `I
+      ( Printf.sprintf "$(b,%s)" Libshoshi.Config.ShoshiEnv.shoshi_editor,
+        {|If set, $(mname) tries to open the bibtex database with program set by the variable |}
+      );
+    `I
+      ( Printf.sprintf "$(b,%s)" Libshoshi.Config.ShoshiEnv.shoshi_editor_options,
+        Printf.sprintf
+          {|If set and %s is set, give a spaced-separated list args to %s|}
+          Libshoshi.Config.ShoshiEnv.shoshi_editor
+          Libshoshi.Config.ShoshiEnv.shoshi_editor );
+  ]
 
 let cmd run =
   let info = Cmd.info ~doc ~man name in
   Cmd.v info @@ term_cmd run
+
+let try_shoshi_editor () =
+  let options =
+    Sys.getenv_opt Libshoshi.Config.ShoshiEnv.shoshi_editor_options
+    |> Option.map (String.split_on_char ' ')
+    |> Option.fold ~none:[] ~some:Fun.id
+  in
+  let editor = Sys.getenv_opt Libshoshi.Config.ShoshiEnv.shoshi_editor in
+  match editor with
+  | Some editor -> (
+      let args = (editor :: options) @ [ Libshoshi.Config.shoshi_bibtex ] in
+      let args = Array.of_list args in
+      try Unix.execvp editor args with _ -> ())
+  | None -> ()
 
 let run cmd =
   let () = Libshoshi.Config.check_shoshi_initialiazed () in
@@ -39,6 +67,7 @@ let run cmd =
   let pid = try Unix.fork () with _ -> failwith "Unable to fork" in
   match pid with
   | 0 ->
+      let () = try_shoshi_editor () in
       let () =
         Array.iter
           (fun editor ->
